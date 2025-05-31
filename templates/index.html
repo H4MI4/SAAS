@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Links{% endblock %}
+
+{% block content %}
+<h1>WhatsApp Link Management</h1>
+
+<div class="redirect-link-display">
+    <p>Your main round-robin redirect link:
+        <a href="{{ url_for('handle_redirect') }}" target="_blank">{{ request.host_url.rstrip('/') }}{{ url_for('handle_redirect') }}</a>
+    </p>
+</div>
+
+<h2>Add New Phone Number</h2>
+<form method="POST" action="{{ url_for('add_number') }}">
+    <div class="form-group">
+        <label for="phone_number">Phone Number (e.g., +12345678900):</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+    </div>
+    <button type="submit">Add Number</button>
+</form>
+
+<div class="phone-list">
+  <h2>Current Phone Numbers</h2>
+  {% if phone_numbers %}
+  <ul>
+      {% for number in phone_numbers %}
+      <li>
+          <span>{{ number }}</span>
+          <form method="POST" action="{{ url_for('remove_number') }}" class="delete-form" style="display: inline;">
+              <input type="hidden" name="phone_number_to_remove" value="{{ number }}">
+              <button type="submit" class="delete-btn">Remove</button>
+          </form>
+      </li>
+      {% endfor %}
+  </ul>
+  {% else %}
+  <p>No phone numbers have been added yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,116 @@
+body {
+    background-color: #000000; /* Black */
+    color: #006400; /* Dark Green */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* More modern font stack */
+    margin: 0;
+    padding: 0;
+}
+.container {
+    width: 80%;
+    max-width: 900px; /* Max width for better readability on large screens */
+    margin: 20px auto;
+    background-color: #111111; /* Slightly lighter black for content areas */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); /* Softer, more diffused glow */
+}
+h1, h2, h3 {
+    color: #008000; /* Brighter Green for headings */
+    border-bottom: 1px solid #006400;
+    padding-bottom: 5px;
+}
+a {
+    color: #00FF00; /* Bright Green for links */
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* Form elements */
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+input[type="tel"], input[type="text"] { /* Combined for consistency */
+    background-color: #333333;
+    color: #00FF00;
+    border: 1px solid #006400;
+    padding: 10px;
+    border-radius: 4px;
+    width: 100%; /* Ensure it takes full width of its container */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    margin-bottom: 10px; /* Space below input fields */
+}
+
+/* Buttons */
+button, input[type="submit"] {
+    background-color: #006400; /* Dark Green */
+    color: #FFFFFF; /* White text for buttons */
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+button:hover, input[type="submit"]:hover {
+    background-color: #008000; /* Brighter Green on hover */
+}
+.delete-btn {
+    background-color: #8B0000; /* Dark Red for delete */
+    color: white;
+    padding: 8px 12px; /* Adjust padding if needed */
+    font-size: 0.9em;
+}
+.delete-btn:hover {
+    background-color: #FF0000; /* Bright Red on hover */
+}
+
+/* Focus states for accessibility */
+input[type="tel"]:focus, input[type="text"]:focus, button:focus, input[type="submit"]:focus {
+    outline: 2px solid #00FF00; /* Bright green outline on focus */
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+/* Phone number list styling */
+.phone-list ul {
+    list-style-type: none;
+    padding: 0; /* Remove default padding */
+}
+.phone-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px; /* Slightly more padding */
+    background-color: #1c1c1c; /* Slightly different dark shade for list items */
+    border: 1px solid #004d00; /* Darker green border */
+    margin-bottom: 8px; /* Consistent spacing */
+    border-radius: 4px; /* Added for consistency */
+}
+.phone-list li span {
+    flex-grow: 1; /* Allow number to take available space */
+    margin-right: 10px; /* Space before delete button */
+}
+
+/* Redirect link display from previous step - ensure it's still good */
+.redirect-link-display {
+    background-color: #2a2a2a; /* Slightly different background */
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #008000; /* Green border */
+}
+.redirect-link-display p {
+    margin: 0;
+    font-size: 1.1em;
+}
+.redirect-link-display a {
+    font-weight: bold;
+    word-break: break-all; /* Ensure long links don't break layout */
+}

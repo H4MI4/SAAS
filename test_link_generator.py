@@ -1,48 +1,118 @@
 import unittest
-import link_generator # To allow modifying phone_numbers and current_index
+# Import the manager instance and the public functions
+from link_generator import manager, get_next_phone_number, generate_whatsapp_link, add_phone_number_to_list, remove_phone_number_from_list, get_all_phone_numbers
 
 class TestLinkGenerator(unittest.TestCase):
 
     def setUp(self):
-        # Reset state before each test
-        link_generator.current_index = 0
-        # We need to assign to link_generator.phone_numbers directly,
-        # not create a new local variable 'phone_numbers'.
-        link_generator.phone_numbers = []
+        # Reset the state of the global manager before each test
+        # Directly manipulate manager's internal list for clean test state
+        manager.numbers = []
+        manager.current_index = 0
+
+    def test_add_and_get_all_numbers(self):
+        self.assertTrue(add_phone_number_to_list("111"))
+        self.assertTrue(add_phone_number_to_list("222"))
+        self.assertEqual(get_all_phone_numbers(), ["111", "222"])
+
+    def test_add_duplicate_number(self):
+        add_phone_number_to_list("111")
+        self.assertFalse(add_phone_number_to_list("111")) # Try adding duplicate
+        self.assertEqual(get_all_phone_numbers(), ["111"])
+
+    def test_add_empty_or_none_number(self):
+        self.assertFalse(add_phone_number_to_list(""))
+        self.assertFalse(add_phone_number_to_list(None))
+        self.assertEqual(get_all_phone_numbers(), [])
+
+
+    def test_remove_number(self):
+        add_phone_number_to_list("111")
+        add_phone_number_to_list("222")
+        self.assertTrue(remove_phone_number_from_list("111"))
+        self.assertEqual(get_all_phone_numbers(), ["222"])
+        self.assertFalse(remove_phone_number_from_list("nonexistent")) # Try removing non-existent
+        self.assertEqual(get_all_phone_numbers(), ["222"])
 
     def test_get_next_phone_number_cycles_and_wraps(self):
-        link_generator.phone_numbers = ['1', '2', '3']
-        self.assertEqual(link_generator.get_next_phone_number(), '1')
-        self.assertEqual(link_generator.get_next_phone_number(), '2')
-        self.assertEqual(link_generator.get_next_phone_number(), '3')
-        self.assertEqual(link_generator.get_next_phone_number(), '1') # Wraps around
+        add_phone_number_to_list('1')
+        add_phone_number_to_list('2')
+        add_phone_number_to_list('3')
+        self.assertEqual(get_next_phone_number(), '1')
+        self.assertEqual(get_next_phone_number(), '2')
+        self.assertEqual(get_next_phone_number(), '3')
+        self.assertEqual(get_next_phone_number(), '1') # Wraps
 
     def test_get_next_phone_number_empty_list(self):
-        link_generator.phone_numbers = []
-        self.assertIsNone(link_generator.get_next_phone_number())
+        self.assertIsNone(get_next_phone_number())
 
     def test_get_next_phone_number_single_number(self):
-        link_generator.phone_numbers = ['123']
-        self.assertEqual(link_generator.get_next_phone_number(), '123')
-        self.assertEqual(link_generator.get_next_phone_number(), '123') # Stays on single number
+        add_phone_number_to_list('123')
+        self.assertEqual(get_next_phone_number(), '123')
+        self.assertEqual(get_next_phone_number(), '123') # Stays on single number
 
+    def test_remove_number_updates_index_correctly_simple_reset_case(self):
+        # This test depends on the specific behavior of index adjustment on removal.
+        # The current PhoneNumberManager.remove_number resets index to 0 if it goes out of bounds.
+        add_phone_number_to_list('1')
+        add_phone_number_to_list('2')
+        add_phone_number_to_list('3') # numbers: ['1', '2', '3'], index: 0
+
+        get_next_phone_number() # returns '1', index becomes 1 (for '2')
+        get_next_phone_number() # returns '2', index becomes 2 (for '3')
+
+        remove_phone_number_from_list('1') # numbers: ['2', '3'], index becomes 0 (reset due to out of bounds potential)
+                                           # manager.current_index would be 0 after removal if the list shrinks
+                                           # and the old index was pointing past the new end or to an element that shifted.
+                                           # Let's trace: before remove: ['1','2','3'], index=2 (pointing to '3')
+                                           # after removing '1': ['2','3']. Old index 2 is out of bounds. So it becomes 0.
+        self.assertEqual(manager.current_index, 0) # Verifying manager's internal state for this specific behavior
+        self.assertEqual(get_next_phone_number(), '2') # Should now get '2' (new index 0)
+        self.assertEqual(get_next_phone_number(), '3') # Then '3'
+        self.assertEqual(get_next_phone_number(), '2') # Wraps to '2'
+
+    def test_remove_last_remaining_number(self):
+        add_phone_number_to_list('1')
+        remove_phone_number_from_list('1')
+        self.assertEqual(get_all_phone_numbers(), [])
+        self.assertIsNone(get_next_phone_number())
+        self.assertEqual(manager.current_index, 0)
+
+    def test_remove_number_maintains_order_and_index_for_next_item(self):
+        # Test case: ['a', 'b', 'c', 'd'], index = 1 (pointing to 'b')
+        # Remove 'b'. List becomes: ['a', 'c', 'd']. Index should ideally point to 'c' (still index 1).
+        add_phone_number_to_list('a')
+        add_phone_number_to_list('b')
+        add_phone_number_to_list('c')
+        add_phone_number_to_list('d')
+
+        get_next_phone_number() # Returns 'a', index is now 1 (pointing to 'b')
+        self.assertEqual(manager.current_index, 1)
+
+        remove_phone_number_from_list('b') # List: ['a', 'c', 'd']
+        # In current remove_number, if index was 1, and len(numbers) is 3, index 1 is still valid.
+        # It should not reset to 0 unless it was >= len(numbers)
+        self.assertEqual(manager.current_index, 1) # Index should still be 1, now pointing to 'c'
+        self.assertEqual(get_next_phone_number(), 'c') # Should pick up 'c'
+        self.assertEqual(get_next_phone_number(), 'd')
+        self.assertEqual(get_next_phone_number(), 'a')
+
+
+    # generate_whatsapp_link tests remain largely the same as they are pure functions
     def test_generate_whatsapp_link_valid_number(self):
-        self.assertEqual(link_generator.generate_whatsapp_link('1234567890'), 'https://wa.me/1234567890')
+        self.assertEqual(generate_whatsapp_link('1234567890'), 'https://wa.me/1234567890')
 
     def test_generate_whatsapp_link_with_plus_and_spaces(self):
-        self.assertEqual(link_generator.generate_whatsapp_link('+1 23 456 7890'), 'https://wa.me/1234567890')
+        self.assertEqual(generate_whatsapp_link('+1 23 456 7890'), 'https://wa.me/1234567890')
 
     def test_generate_whatsapp_link_empty_string_number(self):
-        # This test relies on the modification made to generate_whatsapp_link
-        # to return None if the cleaned number is empty.
-        self.assertIsNone(link_generator.generate_whatsapp_link(''))
+        self.assertIsNone(generate_whatsapp_link(''))
 
     def test_generate_whatsapp_link_only_spaces_and_plus(self):
-        # Similar to empty string, but with characters that get stripped
-        self.assertIsNone(link_generator.generate_whatsapp_link('+   +'))
+        self.assertIsNone(generate_whatsapp_link(' + '))
 
     def test_generate_whatsapp_link_none_number(self):
-        self.assertIsNone(link_generator.generate_whatsapp_link(None))
+        self.assertIsNone(generate_whatsapp_link(None))
 
 if __name__ == '__main__':
     unittest.main()
