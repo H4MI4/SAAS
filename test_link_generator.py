@@ -52,8 +52,10 @@ class TestLinkGenerator(unittest.TestCase):
         self.assertEqual(get_next_phone_number(), '123') # Stays on single number
 
     def test_remove_number_updates_index_correctly_simple_reset_case(self):
-        # This test depends on the specific behavior of index adjustment on removal.
-        # The current PhoneNumberManager.remove_number resets index to 0 if it goes out of bounds.
+        # Verify index adjustment when removing an item while the pointer is at
+        # the end of the list. After removing a number before the current index
+        # the pointer should move left to keep pointing at the same logical
+        # element.
         add_phone_number_to_list('1')
         add_phone_number_to_list('2')
         add_phone_number_to_list('3') # numbers: ['1', '2', '3'], index: 0
@@ -61,15 +63,12 @@ class TestLinkGenerator(unittest.TestCase):
         get_next_phone_number() # returns '1', index becomes 1 (for '2')
         get_next_phone_number() # returns '2', index becomes 2 (for '3')
 
-        remove_phone_number_from_list('1') # numbers: ['2', '3'], index becomes 0 (reset due to out of bounds potential)
-                                           # manager.current_index would be 0 after removal if the list shrinks
-                                           # and the old index was pointing past the new end or to an element that shifted.
-                                           # Let's trace: before remove: ['1','2','3'], index=2 (pointing to '3')
-                                           # after removing '1': ['2','3']. Old index 2 is out of bounds. So it becomes 0.
-        self.assertEqual(manager.current_index, 0) # Verifying manager's internal state for this specific behavior
-        self.assertEqual(get_next_phone_number(), '2') # Should now get '2' (new index 0)
-        self.assertEqual(get_next_phone_number(), '3') # Then '3'
-        self.assertEqual(get_next_phone_number(), '2') # Wraps to '2'
+        remove_phone_number_from_list('1')  # remove first element while index points to last
+        # After removal, index should decrease by one to keep targeting '3'
+        self.assertEqual(manager.current_index, 1)
+        self.assertEqual(get_next_phone_number(), '3')  # Should now get '3'
+        self.assertEqual(get_next_phone_number(), '2')  # Then wraps to '2'
+        self.assertEqual(get_next_phone_number(), '3')
 
     def test_remove_last_remaining_number(self):
         add_phone_number_to_list('1')
@@ -96,6 +95,22 @@ class TestLinkGenerator(unittest.TestCase):
         self.assertEqual(get_next_phone_number(), 'c') # Should pick up 'c'
         self.assertEqual(get_next_phone_number(), 'd')
         self.assertEqual(get_next_phone_number(), 'a')
+
+    def test_remove_number_before_current_index_shifts_index(self):
+        add_phone_number_to_list('a')
+        add_phone_number_to_list('b')
+        add_phone_number_to_list('c')
+        add_phone_number_to_list('d')
+
+        # Cycle twice so current_index points to 'c'
+        self.assertEqual(get_next_phone_number(), 'a')
+        self.assertEqual(get_next_phone_number(), 'b')
+        self.assertEqual(manager.current_index, 2)
+
+        remove_phone_number_from_list('b')  # Remove element before current index
+        # Index should shift left to keep pointing at 'c'
+        self.assertEqual(manager.current_index, 1)
+        self.assertEqual(get_next_phone_number(), 'c')
 
 
     # generate_whatsapp_link tests remain largely the same as they are pure functions

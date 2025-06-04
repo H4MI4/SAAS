@@ -14,33 +14,23 @@ class PhoneNumberManager:
 
     def remove_number(self, number_str):
         if number_str in self.numbers:
-            # If the number to remove is the one at current_index,
-            # and it's not the only number, the next get_next_number_for_robin
-            # should ideally serve the number that *would have been next*.
-            # However, simple removal and index reset/adjustment is also common.
-            # Current implementation: if current_index is beyond the new list end, reset.
-
-            # Store current number to see if it's the one being removed
-            # and if it affects the index logic for get_next_number_for_robin
-            num_at_current_index = None
-            if self.numbers and self.current_index < len(self.numbers):
-                 num_at_current_index = self.numbers[self.current_index]
-
+            # Save the index of the number prior to removal so we can adjust
+            # the round-robin pointer correctly.
+            removed_index = self.numbers.index(number_str)
             self.numbers.remove(number_str)
 
             if not self.numbers:
+                # List became empty; simply reset index
                 self.current_index = 0
-            elif self.current_index >= len(self.numbers):
-                 # If the removed number was before or at current_index,
-                 # and current_index is now out of bounds, wrap around or reset.
-                 self.current_index = 0 # Reset to start for simplicity after removal
-            # Optional: More sophisticated index adjustment if `num_at_current_index == number_str`
-            # For example, if the removed number was what current_index was pointing to,
-            # current_index effectively should point to the "next" item in the modified list,
-            # which means it might not need to change if subsequent items shifted left.
-            # But if it was the last item, or if current_index was beyond the removed item,
-            # it might need adjustment.
-            # The current logic of resetting to 0 if index is out of bounds is safe.
+            else:
+                if removed_index < self.current_index:
+                    # Elements shifted left before the current index,
+                    # so decrement to keep pointing at the same logical item
+                    self.current_index -= 1
+                elif removed_index == self.current_index and self.current_index >= len(self.numbers):
+                    # Removed the element we were about to serve and it was the
+                    # last element. Wrap to the start.
+                    self.current_index = 0
 
             return True
         return False
